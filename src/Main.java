@@ -1,20 +1,45 @@
 import src.CodeParser;
 import src.AIEngine;
 import rules.SecurityRules;
+import java.nio.file.NoSuchFileException;
 
 public class Main {
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+
     public static void main(String[] args) {
+        System.out.println(ANSI_CYAN + "========================================" + ANSI_RESET);
+        System.out.println(ANSI_CYAN + "🛡️  SmartCode-Guard Vulnerability Scanner" + ANSI_RESET);
+        System.out.println(ANSI_CYAN + "========================================" + ANSI_RESET);
+
+
+        String targetFilePath = (args.length > 0) ? args[0] : "tests/VulnerableCode.java";
+
         try {
             CodeParser parser = new CodeParser();
             AIEngine ai = new AIEngine();
-            String code = parser.parseFile("tests/VulnerableCode.java");
-            if (SecurityRules.checkPlaintextPassword(code)) {
-                System.out.println("ALERT: Manual Rule Violation! Plaintext password found in code.");
-            }
-            System.out.println(ai.analyzeCode(code));
             
+            System.out.println("📂 Parsing target file: " + targetFilePath);
+            String code = parser.parseFile(targetFilePath);
+            
+            System.out.println(ANSI_YELLOW + "\n🔍 Running Static Security Rules..." + ANSI_RESET);
+            if (SecurityRules.checkPlaintextPassword(code)) {
+                System.out.println(ANSI_RED + "❌ [CRITICAL ALERT]: Hardcoded plaintext password found in code!" + ANSI_RESET);
+            } else {
+                System.out.println(ANSI_GREEN + "✅ Static Rules Passed." + ANSI_RESET);
+            }
+            
+            System.out.println(ANSI_CYAN + "\n🧠 Initializing AI Engine Analysis..." + ANSI_RESET);
+            System.out.println(ANSI_GREEN + ai.analyzeCode(code) + ANSI_RESET);
+            
+        } catch (NoSuchFileException e) {
+            System.err.println(ANSI_RED + "❌ Error: File not found at path -> " + targetFilePath + ANSI_RESET);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(ANSI_RED + "❌ An unexpected error occurred: " + e.getMessage() + ANSI_RESET);
         }
+        System.out.println(ANSI_CYAN + "========================================" + ANSI_RESET);
     }
 }
